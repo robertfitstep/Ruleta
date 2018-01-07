@@ -43,10 +43,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Hrac.cs" />
+    <Compile Include="Messages.cs" />
+    <Compile Include="Policko.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RuletovyStol.cs" />
     <Compile Include="Tah.cs" />
+    <Compile Include="Prikazy.cs" />
+    <Compile Include="VlastnostiPolicka.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

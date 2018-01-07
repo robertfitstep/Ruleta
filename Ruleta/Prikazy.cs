@@ -6,12 +6,15 @@ using System.Threading.Tasks;
 
 namespace Ruleta
 {
-    class Program
+    public enum Prikazy
     {
-        static void Main(string[] args)
-        {
-            RuletovyStol ruletovyStol1 = new RuletovyStol();
-
-        }
+        Číslo,
+        Farba,
+        Párnosť,
+        Rada,
+        Rozsah,
+        Replay,
+        Koniec,
+        Pomoc
     }
 }

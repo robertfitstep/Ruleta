@@ -8,293 +8,327 @@ namespace Ruleta
 {
     class RuletovyStol
     {
-        string nespravnyPrikaz = "Zadali ste nesprávny príkaz.";
-        string zadTypStavky = "Zadajte typ stávky.\n1 = na číslo\n2 = na farbu\n3 = Párna/Nepárna\n4 = Stávka na radu\nReplay = zobraziť historiu\nKoniec = ukončiť hru";
-        string zadVasuStavku = "Zadajte vašu stávku";
-        string zadVyskuStavky = "Zadajte výšku stávky v EUR";
-        string msg_prehra = "Prehrali ste";
-        string msg_vyhra = "Vyhrali ste";
-        string msg_nespravna_stavka = "Zadali ste nesprávnu stávku";
-        string msg_prehra_kreditu = "Prehrali ste všetok kredit.\n\nZačína sa nová hra.";
-        string msg_zostavajuci_kredit = "Váš zostávajúci kredit je";
-
-        Random generatorCisiel = new Random();
-
-        Hrac Hrac1 = new Hrac(1000);
-
-        readonly public int[] ruletoveCisla = new int[37] {
-
-            //nakreslený stôl rulety 
-
-            //farba čísla                  čísla na stole
-
-                    3,                  //        0
-             1,     0,      1,          //  1     2       3
-             0,     1,      0,          //  4     5       6
-             1,     0,      1,          //  7     8       9
-             0,     0,      1,          //  10    11      12
-             0,     1,      0,          //  13    14      15
-             1,     0,      1,          //  16    17      18
-             1,     0,      1,          //  19    20      21
-             0,     1,      0,          //  22    23      24     
-             1,     0,      1,          //  25    26      27
-             0,     0,      1,          //  28    29      30
-             0,     1,      0,          //  31    32      33
-             1,     0,      1           //  34    35      36
-
-        };
-
-        readonly string[] farby = new string[2] { "čierna", "červená" };
-
-        
-
-        readonly Dictionary<int, string> nazovStavky = new Dictionary<int, string>()
-        {
-            {1,"Stávka na číslo" },
-            {2, "Stávka na farbu" },
-            {3, "Stávka na párnu/nepárnu" },
-            {4, "Stávka na radu" }
-        };
+        private Policko[] ruletovyStol;
+        private Hrac Hrac1;
+        private Random generatorCisiel = new Random();
+        private int vysledokSpinu;
+        private string zadanaStavkaUzivatelom;
+        private int vyskaStavky;
+        private int vyhra;
+        private Farba[] rozmiestnenieFarieb = new Farba[37]
+            {
+                                Farba.Zelená,                   //      0
+                Farba.červená,  Farba.Čierna,   Farba.červená,  //  1   2   3
+                Farba.Čierna,   Farba.červená,  Farba.Čierna,   //  4   5   6 
+                Farba.červená,  Farba.Čierna,   Farba.červená,  //  7   8   9 
+                Farba.Čierna,   Farba.Čierna,   Farba.červená,  //  10  11  12
+                Farba.Čierna,   Farba.červená,  Farba.Čierna,   //  13  14  15
+                Farba.červená,  Farba.Čierna,   Farba.červená,  //  16  17  18
+                Farba.červená,  Farba.Čierna,   Farba.červená,  //  19  20  21
+                Farba.Čierna,   Farba.červená,  Farba.Čierna,   //  22  23  24
+                Farba.červená,  Farba.Čierna,   Farba.červená,  //  25  26  27
+                Farba.Čierna,   Farba.Čierna,   Farba.červená,  //  28  29  30
+                Farba.Čierna,   Farba.červená,  Farba.Čierna,   //  31  32  33
+                Farba.červená,  Farba.Čierna,   Farba.červená,  //  34  35  36
+            };
 
         public RuletovyStol()
         {
-            ZadajPrikaz();
+            this.ruletovyStol = vratRuletovyStol();
+            this.Hrac1 = new Hrac(1000);
+            precitajPrikazUzivatela();
         }
 
-        public void ZadajPrikaz()
+        private void precitajPrikazUzivatela()
         {
-            //rieši vstup od užívateľa
-
-            string typStavky;
-            Console.WriteLine(zadTypStavky);
-            typStavky = Console.ReadLine();
-
-            switch (typStavky)
-            {
-                case "1":  //číslo stávky                    
-                case "2":
-                case "3":
-                case "4":
-                    sprocesujStavku(typStavky);
-                    break;
-                case "Replay":
-                    Hrac1.VypisHistoriu();
-                    ZadajPrikaz();
-                    break;
-                case "Koniec":
-                    Environment.Exit(0);
-                    break;
-                default:
-                    Console.WriteLine(nespravnyPrikaz);
-                    ZadajPrikaz();
-                    break;
-            }
+            Console.WriteLine(Messages.zadPrikaz);
+            validujAVykonajPrikaz(Console.ReadLine());
+            
         }
 
-
-
-        private int[] Spin()
+        private void validujAVykonajPrikaz(string prikazUzivatela)
         {
-            int randomCislo = generatorCisiel.Next(37);
-            return new int[2] { randomCislo, ruletoveCisla[randomCislo] };
+            if (prikazUzivatela == Prikazy.Farba.ToString() || prikazUzivatela == Prikazy.Číslo.ToString() ||
+                prikazUzivatela == Prikazy.Párnosť.ToString() || prikazUzivatela == Prikazy.Rada.ToString() ||
+                prikazUzivatela == Prikazy.Rozsah.ToString())
+            {
+                precitajStavku(prikazUzivatela);
+            }
+            else if (prikazUzivatela == Prikazy.Replay.ToString())
+            {
+                Hrac1.VypisHistoriu();
+                precitajPrikazUzivatela();
+            }
+            else if (prikazUzivatela == Prikazy.Koniec.ToString()) Environment.Exit(0);
+            else if (prikazUzivatela == Prikazy.Pomoc.ToString()) vypisOznamAPresmeruj(vratZoznamPrikazov(),precitajPrikazUzivatela);
+            else vypisOznamAPresmeruj(Messages.nespravnyPrikaz, precitajPrikazUzivatela);   
         }
 
-        private void VypisVysledok(int[] vysledok)
+        private void precitajStavku(string typStavky)
         {
-            Console.WriteLine("Padla : {0}", PrelozVysledok(vysledok));
+            Console.WriteLine(Messages.zadVasuStavku);
+            zadanaStavkaUzivatelom = ValidujStavku(Console.ReadLine(), typStavky);
+            Console.WriteLine(Messages.zadVyskuStavky);
+            vyskaStavky = validujVyskuStavky(Console.ReadLine(), typStavky);
+            roztocRuletuASprocesujStavku(typStavky);
         }
 
-        private string PrelozVysledok(int[] vysledok)
-        {
-            //vráti výsledok v čitateľnom tvare "číslo (farba)"
-
-            string farba;
-
-            if (vysledok[1] == 0)
-            {
-                farba = farby[0]; //čierna
-            }
-            else if (vysledok[1] == 1)
-            {
-                farba = farby[1]; //červená
-            }
-            else
-            {
-                farba = "N/A";
-            }
-
-            return String.Format("{0} ({1})", vysledok[0], farba);
-        }
-
-        private int VratFarbu(string vasaStavka)
-        {
-            if(vasaStavka == farby[0])
-            {
-                return 0;
-            }
-            else if (vasaStavka == farby[1])
-            {
-                return 1;
-            }
-            else
-            {
-                return 3;
-            }
-        }
-
-        private int VyhodnotVysledok(int vyskaStavky, int[] vysledokSpinu, string vasaStavka, int typStavky)
-        {
-            //vracia výšku výhry (+) alebo výšku prehry (-)
-
-            switch (typStavky)
-            {
-                case 1:
-                    if (Convert.ToString(vysledokSpinu[0]) == vasaStavka)
-                    {
-                        return 35 * vyskaStavky;
-                    }
-                    else
-                    {
-                        return -vyskaStavky;
-                    }
-                case 2:
-                    if (vysledokSpinu[1] == VratFarbu(vasaStavka))
-                    {
-                        return vyskaStavky;
-                    }
-                    else
-                    {
-                        return -vyskaStavky;
-                    }
-                case 3:
-                    if (vasaStavka == "Párna" && vysledokSpinu[0] % 2 == 0)
-                    {
-                        return vyskaStavky;
-                    }
-                    else if (vasaStavka == "Nepárna" && vysledokSpinu[0] % 2 != 0)
-                    {
-                        return vyskaStavky;
-                    }
-                    else
-                    {
-                        return -vyskaStavky;
-                    }
-                case 4: //stávka na radu
-                    if (vasaStavka == "1" && (vysledokSpinu[0] - Int32.Parse(vasaStavka)) % 3 == 0)
-                    {
-                        return vyskaStavky * 2;
-                    }
-                    else if (vasaStavka == "2" && (vysledokSpinu[0] - Int32.Parse(vasaStavka)) % 3 == 0)
-                    {
-                        return vyskaStavky * 2;
-                    }
-                    else if (vasaStavka == "3" && (vysledokSpinu[0] - Int32.Parse(vasaStavka)) % 3 == 0)
-                    {
-                        return vyskaStavky * 2;
-                    }
-                    else
-                    {
-                        return -vyskaStavky * 2;
-                    }
-                default:
-                    return 0;
-            }
-
-        }
-
-        private bool ValidujStavku(string vasaStavka, string typStavky)
+        private string ValidujStavku(string zadanaStavkaUzivatelom, string typStavky)
         {
             // validácia stávky (správne číslo, farba...), v rámci konkrétneho typu stávky
+            int parsovanaStavka;
 
-            switch (typStavky) {
-                case "1": //stávka na číslo
-                    int parsovanaStavka;
-                    if (Int32.TryParse(vasaStavka, out parsovanaStavka) && parsovanaStavka >= 0 && parsovanaStavka <= 36)
-                    {
-                        return true;
-                    }
-                        else
-                    {
-                        return false;
-                    }
-                case "2":
-                    if (vasaStavka == farby[0] || vasaStavka == farby[1])
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                case "3":
-                    if (vasaStavka == "Párna" || vasaStavka == "Nepárna")
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                case "4": //stávka na radu
-                    if (vasaStavka == "1" || vasaStavka == "2" || vasaStavka == "3")
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                default:
-                    return false;
-        }
-    }
-
-        void sprocesujStavku(string typStavky)
-        {
-            int[] vysledokSpinu;
-            string vasaStavka;
-            int vyskaStavky;
-            int vyhra;
-
-            Console.WriteLine(zadVasuStavku);
-            vasaStavka = Console.ReadLine();
-            Console.WriteLine(zadVyskuStavky);
-            vyskaStavky = Int32.Parse(Console.ReadLine());
-            if (ValidujStavku(vasaStavka, typStavky))
+            if (zadanaStavkaUzivatelom == Prikazy.Pomoc.ToString())
             {
-                vysledokSpinu = Spin();
-                VypisVysledok(vysledokSpinu);
-                vyhra = VyhodnotVysledok(vyskaStavky, vysledokSpinu, vasaStavka, Int32.Parse(typStavky));
-                if (vyhra > 0)
-                {
-                    Console.WriteLine("{0} {1}EUR", msg_vyhra, vyhra);
-                    Hrac1.zostavajuciKredit = Hrac1.zostavajuciKredit + vyhra;
-                    Hrac1.zapisTah(vyskaStavky, PrelozVysledok(vysledokSpinu), nazovStavky[Int32.Parse(typStavky)],vyhra,vasaStavka);
-                }
-                else
-                {
-                    Console.WriteLine("{0} {1}EUR", msg_prehra, -vyhra);
-                    if (Hrac1.zostavajuciKredit + vyhra <= 0)
-                    {
-                        Console.WriteLine(msg_prehra_kreditu);
-                        Hrac1 = new Hrac(1000);
-                        ZadajPrikaz();
-                    }
-                    else
-                    {
-                        Hrac1.zostavajuciKredit = Hrac1.zostavajuciKredit + vyhra;
-                        Hrac1.zapisTah(vyskaStavky, PrelozVysledok(vysledokSpinu), nazovStavky[Int32.Parse(typStavky)], vyhra, vasaStavka);
-                    }
-                    
-                }
-                Console.WriteLine("{0} {1}EUR", msg_zostavajuci_kredit, Hrac1.zostavajuciKredit);
-                ZadajPrikaz();
+                vypisOznamAPresmeruj(vratVolbyPodlaTypuStavky(typStavky), precitajStavku, typStavky);
+                return zadanaStavkaUzivatelom;
+            }
+            else if (typStavky == Prikazy.Číslo.ToString() && Int32.TryParse(zadanaStavkaUzivatelom, out parsovanaStavka) && parsovanaStavka >= 0 && parsovanaStavka <= 36)
+                return zadanaStavkaUzivatelom;
+
+            else if (typStavky == Prikazy.Farba.ToString() && nachadzaSaVoFarbach(zadanaStavkaUzivatelom)) 
+                return zadanaStavkaUzivatelom;
+
+            else if (typStavky == Prikazy.Párnosť.ToString() && nachadzaSaVParnostiach(zadanaStavkaUzivatelom))
+                return zadanaStavkaUzivatelom;
+
+            else if (typStavky == Prikazy.Rada.ToString() && nachadzaSaVRadach(zadanaStavkaUzivatelom)) return zadanaStavkaUzivatelom;
+            else if (typStavky == Prikazy.Rozsah.ToString() &&nachadzaSaVRozsahu(zadanaStavkaUzivatelom)) return zadanaStavkaUzivatelom;
+            else
+            {
+                vypisOznamAPresmeruj(Messages.msg_nespravna_stavka, precitajStavku, typStavky);
+                return zadanaStavkaUzivatelom;
+            }
+        }
+
+        private int validujVyskuStavky(string zadanaVyskaStavkyUzivatelom, string typStavky)
+        {
+            int vyskaStavky;
+            bool stavkaJeCislo = Int32.TryParse(zadanaVyskaStavkyUzivatelom, out vyskaStavky);
+
+            if ( stavkaJeCislo && Hrac1.zostavajuciKredit >= vyskaStavky && vyskaStavky >= 0 )
+            {
+                return vyskaStavky;
+            }
+            else if (stavkaJeCislo && Hrac1.zostavajuciKredit < vyskaStavky && vyskaStavky >= 0)
+            {
+                vypisOznamAPresmeruj(Messages.msg_nedostatok_kreditu, precitajStavku, typStavky);
+                return 0;
+            }
+            else if (stavkaJeCislo && 0 >= vyskaStavky)
+            {
+                vypisOznamAPresmeruj(Messages.msg_nul_alebo_minus_stavka, precitajStavku, typStavky);
+                return 0;
             }
             else
             {
-                Console.WriteLine(msg_nespravna_stavka);
-                ZadajPrikaz();
+                vypisOznamAPresmeruj(Messages.msg_nepravny_format_kreditu, precitajStavku, typStavky);
+                return 0;
             }
+        }
+
+        private void roztocRuletuASprocesujStavku(string typStavky)
+        {
+
+            vysledokSpinu = Spin();
+            VypisVysledok(vysledokSpinu);
+            vyhra = vratVyskuVyhry(vyskaStavky, vysledokSpinu, zadanaStavkaUzivatelom, typStavky);
+            zapisVyhru(typStavky);
+            vypisZostavajuciKredit();
+            precitajPrikazUzivatela();
+        }
+
+        private Párnosť vratParnost(int i)
+        {
+            if (i == 0) return Párnosť.Žiadna;
+            else if (i % 2 == 0) return Párnosť.Párna;
+            return Párnosť.Nepárna;
+        }
+
+        private Rada vratRadu(int i)
+        {
+            if (i == 0) return Rada.Žiadna;
+            if (i == 1 || (i - 1) % 3 == 0) return Rada.Prvá;
+            else if (i == 2 || (i - 2) % 3 == 0) return Rada.Druhá;
+            return Rada.Tretia;
+        }
+
+        private bool nachadzaSaCisloVRozsahu(int i, string stavkaUzivatela)
+        {
+            if (stavkaUzivatela == Rozsah.R13_24.ToString() && i >= 13 && i <= 24) return true;
+            else if (stavkaUzivatela == Rozsah.R19_36.ToString() && i >= 19 && i <= 36) return true;
+            else if (stavkaUzivatela == Rozsah.R1_12.ToString() && i >= 1 && i <= 12) return true;
+            else if (stavkaUzivatela == Rozsah.R1_18.ToString() && i >= 1 && i <= 18) return true;
+            else if (stavkaUzivatela == Rozsah.R25_36.ToString() && i >= 25 && i <= 36) return true;
+            else if (stavkaUzivatela == Rozsah.Žiadny.ToString() && i == 0) return true;
+            else return false;
+        }
+
+        private Policko[] vratRuletovyStol()
+        {
+            Policko[] ruletovyStol = new Policko[37];
+
+            for (int i = 0; i < ruletovyStol.Length; i++)
+            {
+                ruletovyStol[i].Farba = rozmiestnenieFarieb[i];
+                ruletovyStol[i].Cislo = i;
+                ruletovyStol[i].Parnost = vratParnost(i);
+                ruletovyStol[i].Rada = vratRadu(i);
+            }
+            return ruletovyStol;
+        }
+
+        private int Spin()
+        {
+            return generatorCisiel.Next(37);
+        }
+
+        private string vratCitatelnyVysledok(int vysledok)
+        {
+            //vráti výsledok v čitateľnom tvare "číslo (farba)"
+            return String.Format("{0} ({1})", vysledok, rozmiestnenieFarieb[vysledok]);
+        }
+
+        private int vratVyskuVyhry(int vyskaStavky, int vysledokSpinu, string vasaStavka, string typStavky)
+        {
+            //vracia výšku výhry (+) alebo výšku prehry (-)
+            if (typStavky == Prikazy.Číslo.ToString() && Convert.ToString(vysledokSpinu) == vasaStavka) return 35 * vyskaStavky;
+            else if (typStavky == Prikazy.Farba.ToString() && rozmiestnenieFarieb[vysledokSpinu].ToString() == vasaStavka) return vyskaStavky;
+            else if (typStavky == Prikazy.Párnosť.ToString() && vratParnost(vysledokSpinu).ToString() == vasaStavka) return vyskaStavky;
+            else if (typStavky == Prikazy.Rada.ToString() && vasaStavka == vratRadu(vysledokSpinu).ToString()) return vyskaStavky * 2;
+            else if (typStavky == Prikazy.Rozsah.ToString() && nachadzaSaCisloVRozsahu(vysledokSpinu, vasaStavka)) return vyskaStavky * 2;
+            else return -vyskaStavky;
+
+        }
+
+        private void VypisVysledok(int vysledok)
+        {
+            Console.WriteLine("Padla : {0} ({1})", vysledok, rozmiestnenieFarieb[vysledok]);
+        }
+
+        private void vypisOznamAPresmeruj(string message, Action<string> redirect, string argument)
+        {
+            Console.WriteLine(message);
+            redirect(argument);
+        }
+
+        private void vypisOznamAPresmeruj(string message, Action redirect)
+        {
+            Console.WriteLine(message);
+            redirect();
+        }
+
+        private void zapisVyhru(string typStavky)
+        {
+            if (vyhra > 0)
+            {
+                Console.WriteLine("{0} {1}EUR", Messages.msg_vyhra, vyhra);
+                zapisHracovTah(typStavky);
+            }
+            else
+            {
+                Console.WriteLine("{0} {1}EUR", Messages.msg_prehra, -vyhra);
+                if (Hrac1.zostavajuciKredit + vyhra <= 0)
+                {
+                    Console.WriteLine(Messages.msg_prehra_kreditu);
+                    Hrac1 = new Hrac(1000);
+                    precitajPrikazUzivatela();
+                }
+                else zapisHracovTah(typStavky);
+
+            }
+        }
+
+        private void vypisZostavajuciKredit()
+        {
+            Console.WriteLine("{0} {1}EUR", Messages.msg_zostavajuci_kredit, Hrac1.zostavajuciKredit);
+        }
+
+        private void zapisHracovTah(string typStavky)
+        {
+            Hrac1.zostavajuciKredit = Hrac1.zostavajuciKredit + vyhra;
+            Hrac1.zapisTah(vyskaStavky, vratCitatelnyVysledok(vysledokSpinu), typStavky, vyhra, zadanaStavkaUzivatelom);
+        }
+
+        private string vratZoznamPrikazov()
+        {
+            string stavky = Messages.msg_zvolte;
+            foreach (string meno in Enum.GetNames(typeof(Prikazy))) stavky = stavky + meno + "\n";
+            return stavky;
+        }
+        
+        private string vratZoznamFarieb()
+        {
+            string farby = Messages.msg_zvolte;
+            foreach (string meno in Enum.GetNames(typeof(Farba))) farby = farby + meno + "\n";
+            return farby;
+        }
+
+        private string vratZoznamParnosti()
+        {
+            string parnosti = Messages.msg_zvolte;
+            foreach (string meno in Enum.GetNames(typeof(Párnosť))) parnosti = parnosti + meno + "\n";
+            return parnosti;
+        }
+
+        private string vratZoznamRad()
+        {
+            string rady = Messages.msg_zvolte;
+            foreach (string meno in Enum.GetNames(typeof(Rada))) rady = rady + meno + "\n";
+            return rady;
+        }
+
+        private string vratZoznamRozsahov()
+        {
+            string rozsahy = Messages.msg_zvolte;
+            foreach (string meno in Enum.GetNames(typeof(Rozsah))) rozsahy = rozsahy + meno + "\n";
+            return rozsahy;
+        }
+
+        private string vratVolbyPodlaTypuStavky(string typStavky)
+        {
+            if (typStavky == Prikazy.Farba.ToString()) return vratZoznamFarieb();
+            else if (typStavky == Prikazy.Číslo.ToString()) return Messages.msg_zadaj_0_36;
+            else if (typStavky == Prikazy.Párnosť.ToString()) return vratZoznamParnosti();
+            else if (typStavky == Prikazy.Rada.ToString()) return vratZoznamRad();
+            else if (typStavky == Prikazy.Rozsah.ToString()) return vratZoznamRozsahov();
+            else return "";
+        }
+
+        private bool nachadzaSaVRozsahu(string zadanaStavkaUzivatelom)
+        {
+            foreach (string meno in Enum.GetNames(typeof(Rozsah)))
+            {
+                if (zadanaStavkaUzivatelom == meno) return true;
+            }
+            return false;
+        }
+
+        private bool nachadzaSaVoFarbach(string zadanaStavkaUzivatelom)
+        {
+            foreach (string meno in Enum.GetNames(typeof(Farba)))
+            {
+                if (zadanaStavkaUzivatelom == meno) return true;
+            }
+            return false;
+        }
+
+        private bool nachadzaSaVRadach(string zadanaStavkaUzivatelom)
+        {
+            foreach (string meno in Enum.GetNames(typeof(Rada)))
+            {
+                if (zadanaStavkaUzivatelom == meno) return true;
+            }
+            return false;
+        }
+
+        private bool nachadzaSaVParnostiach(string zadanaStavkaUzivatelom)
+        {
+            foreach (string meno in Enum.GetNames(typeof(Párnosť)))
+            {
+                if (zadanaStavkaUzivatelom == meno) return true;
+            }
+            return false;
         }
     }
 }

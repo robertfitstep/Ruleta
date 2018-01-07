@@ -11,15 +11,15 @@ namespace Ruleta
         public int vyskaStavky;
         public string prelozenyVysledokSpinu;
         public int cisloTahu;
-        public string nazovStavky;
+        public string TypStavky;
         public int vyhra;
         public string vasaStavka;
 
-        public Tah(int cisloTahu, int vyskaStavky, string prelozenyVysledokSpinu, string nazovStavky, int vyhra, string vasaStavka)
+        public Tah(int cisloTahu, int vyskaStavky, string prelozenyVysledokSpinu, string TypStavky, int vyhra, string vasaStavka)
         {
             this.vyskaStavky = vyskaStavky;
             this.prelozenyVysledokSpinu = prelozenyVysledokSpinu;
-            this.nazovStavky = nazovStavky;
+            this.TypStavky = TypStavky;
             this.cisloTahu = cisloTahu;
             this.vyhra = vyhra;
             this.vasaStavka = vasaStavka;

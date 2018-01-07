@@ -6,12 +6,11 @@ using System.Threading.Tasks;
 
 namespace Ruleta
 {
-    class Program
+    struct Policko
     {
-        static void Main(string[] args)
-        {
-            RuletovyStol ruletovyStol1 = new RuletovyStol();
-
-        }
+        public int Cislo;
+        public Farba Farba;
+        public Rada Rada;
+        public Párnosť Parnost;
     }
 }
